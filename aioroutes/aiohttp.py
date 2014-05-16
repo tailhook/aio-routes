@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from pathlib import PurePosixPath as Path
 from urllib.parse import urlsplit
 import aiohttp.server
 
@@ -14,9 +13,15 @@ class Request(BaseRequest):
 
     def __init__(self, proto, message, payload):
         split_url = urlsplit(message.path)
-        self.path = Path(split_url.path)
-        self.content_type = message['Content-Type']
-        self.cookie = message['Cookie']
+        self.uri = split_url.path
+        self.content_type = None
+        cookie = []
+        for k, v in message.headers:
+            if k == 'CONTENT-TYPE':
+                self.content_type = v
+            elif k == 'COOKIE':
+                cookie.append(v)
+        self.cookie = ','.join(cookie)
         self.body = payload
 
 

@@ -12,8 +12,8 @@ class WebException(Exception):
 class Forbidden(WebException):
 
     def default_response(self):
-        return (b'403 Forbidden',
-                b'Content-Type\0text/html\0',
+        return ('403 Forbidden',
+                [('Content-Type', 'text/html')],
                 b'<!DOCTYPE html>'
                 b'<html>'
                     b'<head>'
@@ -29,8 +29,8 @@ class Forbidden(WebException):
 class InternalError(WebException):
 
     def default_response(self):
-        return (b'500 Internal Server Error',
-                b'Content-Type\0text/html\0',
+        return ('500 Internal Server Error',
+                [('Content-Type', 'text/html')],
                 b'<!DOCTYPE html>'
                 b'<html>'
                     b'<head>'
@@ -46,8 +46,8 @@ class InternalError(WebException):
 class NotFound(WebException):
 
     def default_response(self):
-        return (b'404 Not Found',
-                b'Content-Type\0text/html\0',
+        return ('404 Not Found',
+                [('Content-Type', 'text/html')],
                 b'<!DOCTYPE html>'
                 b'<html>'
                     b'<head>'
@@ -63,8 +63,8 @@ class NotFound(WebException):
 class MethodNotAllowed(WebException):
 
     def default_response(self):
-        return (b'405 Method Not Allowed',
-                b'Content-Type\0text/html\0',
+        return ('405 Method Not Allowed',
+                [('Content-Type', 'text/html')],
                 b'<!DOCTYPE html>'
                 b'<html>'
                     b'<head>'
@@ -84,10 +84,10 @@ class Redirect(WebException):
         self.location = location
 
     def location_header(self):
-        return b'Location\0' + self.location.encode('ascii') + b'\0'
+        return [('Location', self.location)]
 
     def headers(self):
-        return (b'Content-Type\0text/html\0'
+        return ([('Content-Type', 'text/html')]
                 + self.location_header())
 
     def default_response(self):
@@ -120,10 +120,9 @@ class CompletionRedirect(Redirect):
         self.cookie = cookie
 
     def headers(self):
-        sup = super().headers()
+        sup = super().headers().copy()
         if self.cookie is not None:
-            sup += self.cookie.output(header='Set-Cookie\0',
-                                      sep='\0').encode('ascii') + b'\0'
+            sup['Set-Cookie'] = self.cookie.output(header='')
         return sup
 
 
