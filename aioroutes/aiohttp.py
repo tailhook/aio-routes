@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from urllib.parse import urlsplit
 import aiohttp.server
 
 from .request import BaseRequest
@@ -12,8 +11,7 @@ log = logging.getLogger(__name__)
 class Request(BaseRequest):
 
     def __init__(self, proto, message, payload):
-        split_url = urlsplit(message.path)
-        self.uri = split_url.path
+        self.uri = message.path
         self.content_type = None
         cookie = []
         for k, v in message.headers:
