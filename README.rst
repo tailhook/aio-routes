@@ -21,7 +21,7 @@ the site hierarchy.
 
 Let's see an example:
 
-..code-block:: python
+.. code-block:: python
 
     class Root(aioroutes.Resource):
 
@@ -52,7 +52,7 @@ In the next examples we will avoid ``main`` boilerplate.
 You may noticed, that home page ``http://localhost:8000`` is empty. To fill
 in that page, you need to add a special method ``index``:
 
-..code-block:: python
+.. code-block:: python
 
     class Root(aioroutes.Resource):
 
@@ -66,7 +66,7 @@ Parameters
 
 If your page needs any parameters, you can just add them to a method:
 
-..code-block:: python
+.. code-block:: python
 
         @aioroutes.page
         def hello(self, name):
@@ -82,7 +82,7 @@ Submitting arguments as urlencoded ``POST`` form works too.
 The usual semantics for python arguments are observed. For example you can
 make keyword-only arguments and you may have defaults:
 
-..code-block:: python
+.. code-block:: python
 
         @aioroutes.page
         def hello(self, *, name="World"):
@@ -90,7 +90,7 @@ make keyword-only arguments and you may have defaults:
 
 You may also use annotations to make aguments typed:
 
-..code-block:: python
+.. code-block:: python
 
         @aioroutes.page
         def add(self, left: int, right: int):
