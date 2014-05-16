@@ -174,8 +174,9 @@ Index and Default
 There are two special methods in resolve chain:
 
 * ``index`` -- called when no more path pieces follows
+
 * ``default`` -- called when more path pieces exists, but no apropriate
-    method found.
+  method found.
 
 Note, that form arguments can be used in both ``index`` and ``default``
 methods but ``index`` never receives positional arguments, while ``default``
