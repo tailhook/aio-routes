@@ -25,6 +25,7 @@ class BaseResolver(metaclass=abc.ABCMeta):
     _RES_METHODS = {_RESOURCE_METHOD}
     resolver_class_attr = 'resolver_class'
     default_method = None
+    index_method = None
 
     def __init__(self, request, parent=None):
         self.request = request
@@ -38,8 +39,7 @@ class BaseResolver(metaclass=abc.ABCMeta):
     def __iter__(self):
         return self
 
-    @asyncio.coroutine
-    def child_fallback(self):
+    def child_error(self):
         raise NotFound()
 
     @abc.abstractmethod
@@ -54,7 +54,16 @@ class BaseResolver(metaclass=abc.ABCMeta):
             try:
                 node = yield from node.resolve_local(name)
             except ChildNotFound:
-                node = yield from self.child_fallback()
+                if self.default_method is not None:
+                    try:
+                        node = getattr(node, self.default_method)
+                    except AttributeError:
+                        self.child_error()
+                    else:
+                        # current path part should be passed to default method
+                        self.args.insert(0, name)
+                else:
+                    self.child_error()
             kind = getattr(node, '_zweb', None)
             if kind in self._LEAF_METHODS:
                 result = yield from  _dispatch_leaf(node, node.__self__, self)
@@ -82,8 +91,8 @@ class BaseResolver(metaclass=abc.ABCMeta):
                 raise NotFound()  # probably impossible but ...
 
 
-        if self.default_method is not None:
-            meth = getattr(node, self.default_method, None)
+        if self.index_method is not None:
+            meth = getattr(node, self.index_method, None)
             if(meth is not None
                 and getattr(meth, '_zweb', None) in self._LEAF_METHODS):
                 result = yield from _dispatch_leaf(node.index, node, self)
@@ -97,7 +106,8 @@ class PathResolver(BaseResolver):
     _LEAF_METHODS = {_LEAF_METHOD, _LEAF_HTTP_METHOD}
     _RES_METHODS = {_RESOURCE_METHOD, _RES_HTTP_METHOD}
     resolver_class_attr = 'http_resolver_class'
-    default_method = 'index'
+    index_method = 'index'
+    default_method = 'default'
 
     def __init__(self, request, parent=None):
         super().__init__(request, parent)
@@ -123,7 +133,6 @@ class MethodResolver(BaseResolver):
     _LEAF_METHODS = {_LEAF_METHOD, _LEAF_HTTP_METHOD}
     _RES_METHODS = {_RESOURCE_METHOD, _RES_HTTP_METHOD}
     resolver_class_attr = 'http_resolver_class'
-    default_method = None
 
     def __init__(self, request, parent=None):
         super().__init__(request, parent)
@@ -133,7 +142,7 @@ class MethodResolver(BaseResolver):
     def __next__(self):
         return self.request.method.upper()
 
-    def child_fallback(self):
+    def child_error(self):
         raise MethodNotAllowed()
 
     def set_args(self, args):
@@ -330,10 +339,11 @@ def _compile_signature(fun, partial):
             varkw = True
         elif param.kind == inspect.Parameter.VAR_POSITIONAL:
             varpos = name
-        if param.kind == inspect.Parameter.KEYWORD_ONLY:
-            kwargs.append('{0!r}: {0}'.format(name))
-        elif not self:
-            args.append(name)
+        else:
+            if param.kind == inspect.Parameter.KEYWORD_ONLY:
+                kwargs.append('{0!r}: {0}'.format(name))
+            elif not self:
+                args.append(name)
         if self:
             self = False
     if not varpos and partial:

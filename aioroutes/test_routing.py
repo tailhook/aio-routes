@@ -9,6 +9,35 @@ from aioroutes.request import BaseRequest
 from aioroutes.exceptions import ChildNotFound, NotFound, MethodNotAllowed
 
 
+def instantiate(klass):
+    """Class decorator which instantiates class in-place"""
+    return klass()
+
+
+class Request(BaseRequest):
+    def __init__(self, uri):
+        self.uri = uri
+
+
+class RoutingTestBase(unittest.TestCase):
+
+    def resolve(self, uri):
+        loop = asyncio.new_event_loop()
+        try:
+            return loop.run_until_complete(
+                self.site._resolve(Request(uri)))
+        finally:
+            loop.close()
+
+    def dispatch(self, uri):
+        loop = asyncio.new_event_loop()
+        try:
+            return loop.run_until_complete(
+                self.site._safe_dispatch(self.Request(uri)))
+        finally:
+            loop.close()
+
+
 class TestLocalDispatch(unittest.TestCase):
 
     def setUp(self):
@@ -543,6 +572,84 @@ class TestDictResource(unittest.TestCase):
 
     def testLonger(self):
         self.assertEqual(self.resolve('/about/more/abc'), 'PAGE:abc')
+
+
+class TestDefault(RoutingTestBase):
+
+    def setUp(self):
+
+        class Root(web.Resource):
+
+            @web.page
+            def default(self):
+                return 'root_default'
+
+            @instantiate
+            class one(web.Resource):
+
+                @web.page
+                def index(self):
+                    return 'one_index'
+
+                @web.page
+                def default(self, one):
+                    return 'one:{}'.format(one)
+
+            @instantiate
+            class star(web.Resource):
+
+                @web.page
+                def default(self, *star):
+                    return 'star:{}'.format(":".join(star))
+
+            @instantiate
+            class onestar(web.Resource):
+
+                @web.page
+                def default(self, one, *star):
+                    return 'onestar({}):{}'.format(one, ":".join(star))
+
+
+        self.site = web.Site(resources=[Root()])
+
+
+    def testDefault(self):
+        with self.assertRaises(NotFound):
+            self.resolve('/')  # no arg default is not supported
+
+    def testDefaultArg(self):
+        self.assertEqual(self.resolve('/one/arg'), 'one:arg')
+
+    def testDefaultIndex(self):
+        self.assertEqual(self.resolve('/one'), 'one_index')
+
+    def testDefaultMany(self):
+        with self.assertRaises(NotFound):
+            self.resolve('/one/arg/test')
+
+    def testStar(self):
+        with self.assertRaises(NotFound):
+            self.resolve('/star')  # no arg default is not supported
+
+    def testStarArg(self):
+        self.assertEqual(self.resolve('/star/a'), 'star:a')
+
+    def testStarArg2(self):
+        self.assertEqual(self.resolve('/star/a/b'), 'star:a:b')
+
+    def testOneStar(self):
+        with self.assertRaises(NotFound):
+            self.resolve('/onestar')  # no arg default is not supported
+
+    def testOneStarArg(self):
+        self.assertEqual(self.resolve('/onestar/a'), 'onestar(a):')
+
+    def testOneStarArg2(self):
+        self.assertEqual(self.resolve('/onestar/a/b'), 'onestar(a):b')
+
+    def testOneStarArg3(self):
+        self.assertEqual(self.resolve('/onestar/a/b/c'), 'onestar(a):b:c')
+
 
 
 if __name__ == '__main__':

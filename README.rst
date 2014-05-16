@@ -168,6 +168,23 @@ resolve URL. If that resolves, return a page. If that raises ``NotFound``
 on order of resources specified. In general this way is ''not recommended''.
 
 
+Index and Default
+=================
+
+There are two special methods in resolve chain:
+
+* ``index`` -- called when no more path pieces follows
+* ``default`` -- called when more path pieces exists, but no apropriate
+    method found.
+
+Note, that form arguments can be used in both ``index`` and ``default``
+methods but ``index`` never receives positional arguments, while ``default``
+always has at least one.
+
+Also ``default`` method can return a ``Resource`` (hence might be decorated
+with ``@resource``), while ``index`` method must always be a ``page``.
+
+
 Stickers
 ========
 
@@ -212,6 +229,27 @@ Forms
 
 TBD
 
+
+Static Resource
+===============
+
+There is a built-in resource that returns static files. It's very dumb and
+ugly so, use it only for development. Example:
+
+.. code-block:: python
+
+    from aioroutes.static import StaticResource
+    static = StaticResource('./public', ['js', 'css'])
+    resources = [Root()]
+    if options.standalone_debugging_server:
+        resources.insert(0, static)
+    site = Site(resources=[static, Root()])
+
+If you omit second parameter to ``StaticResource`` then it will serve all
+directories, not just ``/js`` and ``/css`` as in example.
+
+You may also "mount" static resource at arbitrary point in the tree, just like
+any other resource.
 
 
 History
