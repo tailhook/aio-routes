@@ -2,7 +2,7 @@ import asyncio
 import logging
 import aiohttp.server
 
-from .request import BaseRequest
+from .request import BaseRequest, FORM_CONTENT_TYPE
 
 
 log = logging.getLogger(__name__)
@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 
 class Request(BaseRequest):
 
-    def __init__(self, proto, message, payload):
+    def __init__(self, proto, message):
         self.uri = message.path
         self.content_type = None
         cookie = []
@@ -20,7 +20,6 @@ class Request(BaseRequest):
             elif k == 'COOKIE':
                 cookie.append(v)
         self.cookie = ','.join(cookie)
-        self.body = payload
 
 
 class HttpProto(aiohttp.server.ServerHttpProtocol):
@@ -32,7 +31,11 @@ class HttpProto(aiohttp.server.ServerHttpProtocol):
     @asyncio.coroutine
     def handle_request(self, message, payload):
         try:
-            req = Request(self, message, payload)
+            req = Request(self, message)
+            if req.content_type == FORM_CONTENT_TYPE:
+                req.body = yield from payload.read()
+            else:
+                req.payload = payload
             try:
                 status, headers, data = yield from self.__site.dispatch(req)
             except Exception as e:

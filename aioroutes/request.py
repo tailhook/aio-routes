@@ -6,7 +6,7 @@ from .util import cached_property
 from .core import Sticker
 
 
-_FORM_CTYPE = b'application/x-www-form-urlencoded'
+FORM_CONTENT_TYPE = 'application/x-www-form-urlencoded'
 
 
 class LegacyMultiDict(object):
@@ -63,7 +63,7 @@ class BaseRequest(object):
         if hasattr(self, 'uri'):
             arguments.update(parse_qsl(self.parsed_uri.query))
         body = getattr(self, 'body', None)
-        if body and self.content_type == _FORM_CTYPE:
+        if body and self.content_type == FORM_CONTENT_TYPE:
             arguments.update(parse_qsl(self.body.decode('ascii')))
         return arguments
 
@@ -73,7 +73,7 @@ class BaseRequest(object):
         if hasattr(self, 'uri'):
             arguments.update(parse_qsl(self.parsed_uri.query))
         body = getattr(self, 'body', None)
-        if body and self.content_type == _FORM_CTYPE:
+        if body and self.content_type == FORM_CONTENT_TYPE:
             arguments.update(parse_qsl(self.body.decode('ascii')))
         return arguments
 
