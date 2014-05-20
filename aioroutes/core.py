@@ -309,7 +309,13 @@ def _compile_signature(fun, partial):
         ann = param.annotation
         if param.default is not inspect.Parameter.empty:
             vars[name + '_def'] = param.default
-            defname = ReprHack('__empty__')
+            if ann is not inspect.Parameter.empty:
+                # If we have annotation, we want to make sure that annotation
+                # is not applied to a default value so we pass __empty__
+                # and check for it later
+                defname = ReprHack('__empty__')
+            else:
+                defname = ReprHack(name + '_def')
         else:
             defname = inspect.Parameter.empty
         if ann is not inspect.Parameter.empty:
@@ -317,7 +323,7 @@ def _compile_signature(fun, partial):
                 lines.append('  {0} = yield from {0}_create(resolver)'
                     .format(name))
                 vars[name + '_create'] = ann.create
-            else:
+            elif ann is not inspect.Parameter.empty:
                 lines.append('  if {0} is __empty__:'.format(name))
                 lines.append('    {0} = {0}_def'.format(name))
                 lines.append('  else:')

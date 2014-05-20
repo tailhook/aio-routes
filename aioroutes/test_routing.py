@@ -107,6 +107,10 @@ class TestResolve(unittest.TestCase):
                 raise web.PathRewrite('/forums')
 
             @web.page
+            def no_annotation(self, val='default'):
+                return 'na:' + val
+
+            @web.page
             def forums(self):
                 return 'forums'
 
@@ -172,6 +176,12 @@ class TestResolve(unittest.TestCase):
     def testSuffix(self):
         with self.assertRaises(NotFound):
             self.resolve('/about/test')
+
+    def testNoAnnotation(self):
+        self.assertEqual(self.resolve('/no_annotation'), 'na:default')
+
+    def testNoAnnotationVal(self):
+        self.assertEqual(self.resolve('/no_annotation/val'), 'na:val')
 
     def testRedirect(self):
         self.assertEqual(self.dispatch('/forum'), 'forums')
