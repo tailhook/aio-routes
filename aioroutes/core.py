@@ -241,12 +241,12 @@ class Site(object):
         if isinstance(result, (str, bytes)):
             if isinstance(result, str):
                 result = result.encode('utf-8')
-            result = ['200 OK', (), result]
+            result = [200, (), result]
         if len(result) < 3:
             if len(result) == 2:
                 result = [result[0], (), result[1]]
             else:
-                result = ['200 OK', (), result[0]]
+                result = [200, (), result[0]]
         return result
 
 
