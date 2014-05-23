@@ -12,7 +12,7 @@ class WebException(Exception):
 class Forbidden(WebException):
 
     def default_response(self):
-        return ('403 Forbidden',
+        return (403,
                 [('Content-Type', 'text/html')],
                 b'<!DOCTYPE html>'
                 b'<html>'
@@ -29,7 +29,7 @@ class Forbidden(WebException):
 class InternalError(WebException):
 
     def default_response(self):
-        return ('500 Internal Server Error',
+        return (500,
                 [('Content-Type', 'text/html')],
                 b'<!DOCTYPE html>'
                 b'<html>'
@@ -46,7 +46,7 @@ class InternalError(WebException):
 class NotFound(WebException):
 
     def default_response(self):
-        return ('404 Not Found',
+        return (404,
                 [('Content-Type', 'text/html')],
                 b'<!DOCTYPE html>'
                 b'<html>'
@@ -63,7 +63,7 @@ class NotFound(WebException):
 class MethodNotAllowed(WebException):
 
     def default_response(self):
-        return ('405 Method Not Allowed',
+        return (405,
                 [('Content-Type', 'text/html')],
                 b'<!DOCTYPE html>'
                 b'<html>'
@@ -79,8 +79,9 @@ class MethodNotAllowed(WebException):
 
 class Redirect(WebException):
 
-    def __init__(self, location, status_code, status_text):
-        self.statusline = '{:d} {}'.format(status_code, status_text)
+    def __init__(self, location, status_code, status_text=None):
+        assert status_text is None, "Not Implemented"
+        self.status_code = status_code
         self.location = location
 
     def location_header(self):
@@ -114,7 +115,7 @@ class CompletionRedirect(Redirect):
     """
 
     def __init__(self, location, cookie=None, *,
-        status_code=303, status_text="See Other"):
+        status_code=303, status_text=None):
         super().__init__(location,
             status_code=status_code, status_text=status_text)
         self.cookie = cookie
