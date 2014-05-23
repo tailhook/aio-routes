@@ -302,8 +302,8 @@ def _compile_signature(fun, partial):
         }
     lines = []
     self = True
-    varkw = False
-    varpos = False
+    varkw = None
+    varpos = None
 
     for name, param in sig.parameters.items():
         ann = param.annotation
@@ -342,9 +342,11 @@ def _compile_signature(fun, partial):
             fun_params.append(param.replace(default=defname))
 
         if param.kind == inspect.Parameter.VAR_KEYWORD:
-            varkw = True
+            varkw = name
+            assert varkw, "Empty argument name?"
         elif param.kind == inspect.Parameter.VAR_POSITIONAL:
             varpos = name
+            assert varpos, "Empty argument name?"
         else:
             if param.kind == inspect.Parameter.KEYWORD_ONLY:
                 kwargs.append('{0!r}: {0}'.format(name))
@@ -370,15 +372,18 @@ def _compile_signature(fun, partial):
         args = args[0] + ','
     else:
         args = ', '.join(args)
+    kwarg_string = '{' + ', '.join(kwargs) + '}'
+    if varkw:
+        if kwargs:
+            lines.append('  {}.update({})'.format(varkw, kwarg_string))
+        kwarg_string = varkw
     if varpos:
-        lines.append('  return ({}) + {}, (), {{{}}}'.format(
-            args, varpos,  ', '.join(kwargs)))
+        lines.append('  return ({}) + {}, (), {}'.format(
+            args, varpos,  kwarg_string))
     elif partial:
-        lines.append('  return ({}), __tail__, {{{}}}'.format(
-            args, ', '.join(kwargs)))
+        lines.append('  return ({}), __tail__, {}'.format(args, kwarg_string))
     else:
-        lines.append('  return ({}), (), {{{}}}'.format(
-            args, ', '.join(kwargs)))
+        lines.append('  return ({}), (), {}'.format(args, kwarg_string))
     text = '\n'.join(lines)
     code = compile(text, '__sig__', 'exec')
     exec(code, vars)

@@ -661,6 +661,55 @@ class TestDefault(RoutingTestBase):
         self.assertEqual(self.resolve('/onestar/a/b/c'), 'onestar(a):b:c')
 
 
+class TestVarKw(RoutingTestBase):
+
+    def setUp(self):
+
+        class Root(web.Resource):
+
+            @web.page
+            def justkw(self, **kw):
+                return 'justkw:{!r}'.format(kw)
+
+            @web.page
+            def kwargkw(self, *, a, **kw):
+                return 'kwargkw:{}:{!r}'.format(a, kw)
+
+            @web.page
+            def poskw(self, a, **kw):
+                return 'poskw:{}:{!r}'.format(a, kw)
+
+            @web.page
+            def varposkw(self, *a, **kw):
+                return 'varposkw:{}:{!r}'.format(','.join(a), kw)
+
+        self.Root = Root
+        self.site = web.Site(resources=[Root()])
+
+
+    def testJustkwEmpty(self):
+        self.assertEqual(self.resolve('/justkw'), 'justkw:{}')
+
+    def testJustkw(self):
+        self.assertEqual(self.resolve('/justkw?a=1'), "justkw:{'a': '1'}")
+
+    def testKwargkw(self):
+        self.assertEqual(self.resolve('/kwargkw?a=1&b=2'),
+            "kwargkw:1:{'b': '2'}")
+
+    def testPoskw(self):
+        self.assertEqual(self.resolve('/poskw/a?b=2'),
+            "poskw:a:{'b': '2'}")
+
+    def testPoskw2(self):
+        self.assertEqual(self.resolve('/poskw?a=1&b=2'),
+            "poskw:1:{'b': '2'}")
+
+    def testVarposkw(self):
+        self.assertEqual(self.resolve('/varposkw/a/b/c?b=2'),
+            "varposkw:a,b,c:{'b': '2'}")
+
+
 
 if __name__ == '__main__':
     unittest.main()
