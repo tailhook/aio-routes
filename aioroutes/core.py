@@ -379,9 +379,13 @@ def _compile_signature(fun, partial):
     else:
         lines.append('  return ({}), (), {{{}}}'.format(
             args, ', '.join(kwargs)))
-    code = compile('\n'.join(lines), '__sig__', 'exec')
+    text = '\n'.join(lines)
+    code = compile(text, '__sig__', 'exec')
     exec(code, vars)
-    return asyncio.coroutine(vars['__sig__'])
+    sigfun = asyncio.coroutine(vars['__sig__'])
+    if __debug__:
+        sigfun.__text__ = text
+    return sigfun
 
 
 def resource(fun):
