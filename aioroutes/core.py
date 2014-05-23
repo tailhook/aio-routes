@@ -74,22 +74,20 @@ class BaseResolver(metaclass=abc.ABCMeta):
                 if newnode is _INTERRUPT:
                     return tail  # tail is actual result in this case
                 self.set_args(tail)
-                self.resource = newnode
-                res_class = getattr(newnode, self.resolver_class_attr, None)
-                if res_class is None:
-                    raise RuntimeError("Value {!r} returned from"
-                        " {!r} is not a resource".format(newnode, node))
-                node = newnode
-                if not isinstance(self, res_class):
-                    newres = res_class(self.request, self)
-                    result = yield from newres.resolve(node)
-                    return result
+                self.resource = node = newnode
             elif kind is _RESOURCE:
                 self.resource = node
             else:
                 log.debug("Wrong kind %r", kind)
                 raise NotFound()  # probably impossible but ...
-
+            res_class = getattr(node, self.resolver_class_attr, None)
+            if res_class is None:
+                raise RuntimeError("Value {!r} is not a resource"
+                    .format(node))
+            if not isinstance(self, res_class):
+                newres = res_class(self.request, self)
+                result = yield from newres.resolve(node)
+                return result
 
         if self.index_method is not None:
             meth = getattr(node, self.index_method, None)

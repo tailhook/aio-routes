@@ -450,6 +450,7 @@ class TestMethod(unittest.TestCase):
             def __init__(self):
                 super().__init__()
                 self.about = About()
+                self.hello = Hello()
 
             @web.resource
             def forum(self, uid:int):
@@ -466,6 +467,17 @@ class TestMethod(unittest.TestCase):
             @web.page
             def more(self, page:str):
                 return 'PAGE:%s' % page
+
+        class Hello(web.Resource):
+            http_resolver_class = web.MethodResolver
+
+            @web.page
+            def GET(self):
+                return "hello:get"
+
+            @web.page
+            def PUT(self, data):
+                return "hello:put:" + data
 
         class Forum(web.Resource):
             http_resolver_class = web.MethodResolver
@@ -494,6 +506,17 @@ class TestMethod(unittest.TestCase):
 
     def testAbout(self):
         self.assertEqual(self.resolve('GET', '/about'), 'blank')
+
+    def testHello(self):
+        self.assertEqual(self.resolve('GET', '/hello'), 'hello:get')
+
+    def testHelloPUT(self):
+        self.assertEqual(self.resolve('PUT', '/hello/value'),
+                         'hello:put:value')
+
+    def testHelloPUTQuery(self):
+        self.assertEqual(self.resolve('PUT', '/hello?data=something'),
+                         'hello:put:something')
 
     def testLessArgs(self):
         with self.assertRaises(NotFound):
