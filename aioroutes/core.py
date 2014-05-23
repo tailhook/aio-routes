@@ -16,6 +16,8 @@ _LEAF_HTTP_METHOD = marker_object('LEAF_HTTP_METHOD')
 _RESOURCE_METHOD = marker_object('RESOURCE_METHOD')
 _RES_HTTP_METHOD = marker_object('RES_HTTP_METHOD')
 _RESOURCE = marker_object('RESOURCE')
+
+# Helps to return result ealier, i.e. in preprocessor
 _INTERRUPT = marker_object('INTERRUPT')
 
 
