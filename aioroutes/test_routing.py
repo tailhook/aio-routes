@@ -451,6 +451,7 @@ class TestMethod(unittest.TestCase):
                 super().__init__()
                 self.about = About()
                 self.hello = Hello()
+                self.greeting = Greeting()
 
             @web.resource
             def forum(self, uid:int):
@@ -492,6 +493,21 @@ class TestMethod(unittest.TestCase):
             @web.page
             def PATCH(self, topic:int):
                 return "set:forum(user:{},topic:{})".format(self.user, topic)
+
+        class NewResolver(web.PathResolver):
+            index_method = 'default'
+
+        class Greeting(web.Resource):
+            http_resolver_class = NewResolver
+
+            @web.page
+            def default(self, arg=None):
+                assert arg != 'greeting', arg
+                return 'greeting_default'
+
+            @web.page
+            def index(self):
+                raise RuntimeError("Problem")
 
         self.site = web.Site(resources=[Root()])
         self.Request = Request
@@ -560,6 +576,9 @@ class TestMethod(unittest.TestCase):
     def testNotEnough(self):
         with self.assertRaises(NotFound):
             self.resolve('PATCH', '/forum?uid=9')
+
+    def testNewResolver(self):
+        self.assertEqual(self.resolve('GET', '/greeting'), 'greeting_default')
 
 
 class TestDictResource(unittest.TestCase):

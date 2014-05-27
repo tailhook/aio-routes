@@ -95,7 +95,7 @@ class BaseResolver(metaclass=abc.ABCMeta):
             meth = getattr(node, self.index_method, None)
             if(meth is not None
                 and getattr(meth, '_zweb', None) in self._LEAF_METHODS):
-                result = yield from _dispatch_leaf(node.index, node, self)
+                result = yield from _dispatch_leaf(meth, node, self)
                 return result
 
         raise NotFound()
@@ -111,11 +111,16 @@ class PathResolver(BaseResolver):
 
     def __init__(self, request, parent=None):
         super().__init__(request, parent)
-        path = request.parsed_uri.path.strip('/')
-        if path:
-            self.args = path.split('/')
+        while parent is not None:
+            if isinstance(parent, PathResolver):
+                self.args = parent.args.copy()
+                break
         else:
-            self.args = []
+            path = request.parsed_uri.path.strip('/')
+            if path:
+                self.args = path.split('/')
+            else:
+                self.args = []
         self.kwargs = dict(request.form_arguments)
 
     def __next__(self):
