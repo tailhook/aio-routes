@@ -3,7 +3,8 @@ aio-routes
 ==========
 
 Aio-routes is a URL routing library for web applications. It doesn't support
-typical pattern-based or regular-expression bases routing. But rather it traverses objects while resolving an url. See examples below, for more info
+typical pattern-based or regular-expression bases routing. But rather it
+traverses objects while resolving an url. See examples below, for more info
 
 
 Usage
@@ -222,7 +223,48 @@ Recipes
 Templates
 ---------
 
-TBD
+A typical template wrapper (using jinja as an example):
+
+.. code-block:: python
+
+    def template(name):
+        def wrapper(fun):
+            @web.postprocessor(fun)
+            def template_postprocessor(self, resolver, data):
+                if not isinstance(data, dict):
+                    return data
+                data = data.copy()
+                data.update({
+                    # Some common template context
+                })
+                template = self.jinja.get_template(name + '.html')
+                return template.render(data)
+            return template_postprocessor
+        return wrapper
+
+It can be used as:
+
+.. code-block:: python
+
+   @template('mypages/cool_page')
+   def cool_page(self, value=1):
+       return {'value: 1}
+
+Things to note:
+
+#. If method returns not a dict, just pass it through. It's useful for error
+   handling and other things.
+
+#. We assume that there is a jinja environment in the class,
+   named``self.jinja``. You can use global environment here, but better to
+   use some dependency injection framework to have jinja environment in the
+   instance.  Syntax for other templating may vary.
+
+#. ``date.update`` is for things that are local for request, totally global
+   things may go into environment. However, if you like to share template
+   ''environment'' (in jinja dialect) with multiple applications, you might
+   want to put globals here. (However, as apps have different template
+   decorator, they might use different environment too).
 
 
 Forms
