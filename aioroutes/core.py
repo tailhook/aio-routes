@@ -125,10 +125,13 @@ class PathResolver(BaseResolver):
             else:
                 self.args = []
         self.kwargs = dict(request.form_arguments)
+        self.current_path = []
 
     def __next__(self):
         try:
-            return self.args.pop(0)
+            part = self.args.pop(0)
+            self.current_path.append(part)
+            return part
         except IndexError:
             raise StopIteration()
 
@@ -137,6 +140,7 @@ class PathResolver(BaseResolver):
 
     def unused_part(self, part):
         self.args.insert(0, part)
+        assert self.current_path.pop() == part, "Wrong part returned"
 
 
 class MethodResolver(BaseResolver):
@@ -421,6 +425,7 @@ def http_resource(fun):
 
 @asyncio.coroutine
 def _dispatch_leaf(fun, self, resolver):
+    resolver.leaf = fun
     preproc = getattr(fun, '_zweb_pre', ())
     result = None
     for prefun in preproc:
@@ -444,6 +449,8 @@ def _dispatch_leaf(fun, self, resolver):
                     exc_info=e)  # debug
                 raise NotFound()
             else:
+                resolver.leaf_args = args
+                resolver.leaf_kwargs = kw
                 result = yield from fun(*args, **kw)
     for proc in fun._zweb_post:
         result = yield from proc(self, resolver, result)
@@ -525,6 +532,8 @@ def decorator(fun):
                         exc_info=e)  # debug
                     raise NotFound()
                 else:
+                    resolver.leaf_args = args
+                    resolver.leaf_kwargs = kw
                     return (yield from fun(self, *args, **kw))
         else:
             @asyncio.coroutine
