@@ -48,6 +48,9 @@ class BaseResolver(metaclass=abc.ABCMeta):
     def set_args(self, args):
         pass
 
+    def unused_part(self, name):
+        pass  # Do nothing for many resolvers except Path
+
     @asyncio.coroutine
     def resolve(self, root):
         self.resource = node = root
@@ -63,7 +66,7 @@ class BaseResolver(metaclass=abc.ABCMeta):
                         self.child_error()
                     else:
                         # current path part should be passed to default method
-                        self.args.insert(0, name)
+                        self.unused_part(name)
                 else:
                     self.child_error()
             kind = getattr(node, '_zweb', None)
@@ -131,6 +134,9 @@ class PathResolver(BaseResolver):
 
     def set_args(self, args):
         self.args = list(args)
+
+    def unused_part(self, part):
+        self.args.insert(0, part)
 
 
 class MethodResolver(BaseResolver):
