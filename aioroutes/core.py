@@ -53,6 +53,7 @@ class BaseResolver(metaclass=abc.ABCMeta):
         self._update_args(ctx)
         kind = getattr(node, '_aio_kind', None)
         if kind is LEAF_KIND:
+            ctx.leaf = node
             result = yield from ctx.dispatch_leaf(node, ctx.args, ctx.kwargs)
             return result
         elif kind is RESOURCE_METHOD_KIND:
@@ -135,6 +136,7 @@ class HierarchicalResolver(BaseResolver):
             kind = getattr(meth, '_aio_kind', None)
             if kind is not LEAF_KIND:
                 raise OutOfScopeError(ctx.scope)
+            ctx.leaf = meth
             result = yield from ctx.dispatch_leaf(meth,
                 ctx.args, ctx.kwargs)
             return result
