@@ -35,6 +35,9 @@ class BaseResolver(metaclass=abc.ABCMeta):
     def child_not_found(self, ctx, name):
         return None
 
+    def _update_args(self, ctx):
+        pass
+
     def _base_resolve(self, ctx, name):
         node = ctx.resource_path[-1]
         # assert name is not None, "Wrong name from {!r}".format(self)
