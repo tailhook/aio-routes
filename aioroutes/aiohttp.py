@@ -20,6 +20,7 @@ class Request(BaseRequest):
             elif k == 'COOKIE':
                 cookie.append(v)
         self.cookie = ','.join(cookie)
+        super().__init__()
 
 
 class HttpProto(aiohttp.server.ServerHttpProtocol):

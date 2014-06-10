@@ -1,35 +1,57 @@
+from .signature import (
+    Sticker
+    )
 from .core import (
-    Sticker,
-    Site,
-    Resource,
-    DictResource,
-    MethodResolver,
-    PathResolver,
+    BaseResource,
+    ResourceInterface,
+    resource,
+    )
+from .decorators import (
     decorator,
     preprocessor,
     postprocessor,
+)
+from .http import (
+    Site,
+    MethodResolver,
+    PathResolver,
     page,
-    resource,
     )
 from .exceptions import (
     PathRewrite,
     CompletionRedirect,
     )
+from .util import (
+    DictResourceMixin,
+    )
 
 __all__ = [
-    # core
+    # signature
     'Sticker',
+    # core
+    'BaseResource',
+    'ResourceInterface',
+    'resource',
+    # http
     'Site',
-    'Resource',
-    'DictResource',
     'MethodResolver',
     'PathResolver',
+    'page',
+    # decorators
     'decorator',
     'preprocessor',
     'postprocessor',
-    'page',
-    'resource',
     # exceptions
     'PathRewrite',
     'CompletionRedirect',
+    # util
+    'DictResourceMixin',
     ]
+
+
+class Resource(BaseResource):
+    http_resolver = PathResolver()
+
+
+class DictResource(DictResourceMixin, Resource):
+    pass

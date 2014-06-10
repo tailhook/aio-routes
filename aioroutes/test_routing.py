@@ -5,8 +5,8 @@ from functools import wraps
 
 # Sorry "web." notation is a legacy from zorro
 import aioroutes as web
-from aioroutes.request import BaseRequest
-from aioroutes.exceptions import ChildNotFound, NotFound, MethodNotAllowed
+from aioroutes.http import BaseHTTPRequest
+from aioroutes.exceptions import OutOfScopeError, NotFound, MethodNotAllowed
 
 
 def instantiate(klass):
@@ -14,8 +14,14 @@ def instantiate(klass):
     return klass()
 
 
-class Request(BaseRequest):
+class Request(BaseHTTPRequest):
     def __init__(self, uri):
+        self.uri = uri
+
+
+class MethRequest(BaseHTTPRequest):
+    def __init__(self, method, uri):
+        self.method = method
         self.uri = uri
 
 
@@ -68,27 +74,21 @@ class TestLocalDispatch(unittest.TestCase):
         self.assertEqual(self.resolve_local('hello'), self.r.hello)
 
     def testHidden(self):
-        with self.assertRaises(ChildNotFound):
+        with self.assertRaises(OutOfScopeError):
             self.resolve_local('_hidden')
 
     def testInvisible(self):
-        with self.assertRaises(ChildNotFound):
+        with self.assertRaises(OutOfScopeError):
             self.resolve_local('invisible')
 
     def testStrange(self):
-        with self.assertRaises(ChildNotFound):
+        with self.assertRaises(OutOfScopeError):
             self.resolve_local('hello world')
 
 
 class TestResolve(unittest.TestCase):
 
     def setUp(self):
-
-        class Request(BaseRequest):
-            def __init__(self, uri):
-                self.uri = uri
-
-        self.Request = Request
 
         class Root(web.Resource):
 
@@ -115,7 +115,7 @@ class TestResolve(unittest.TestCase):
                 return 'forums'
 
             @web.page
-            def request(self, req:BaseRequest):
+            def request(self, req:BaseHTTPRequest):
                 return req
 
         class Forum(web.Resource):
@@ -141,7 +141,7 @@ class TestResolve(unittest.TestCase):
         loop = asyncio.new_event_loop()
         try:
             return loop.run_until_complete(
-                self.site._resolve(self.Request(uri)))
+                self.site._resolve(Request(uri)))
         finally:
             loop.close()
 
@@ -149,7 +149,7 @@ class TestResolve(unittest.TestCase):
         loop = asyncio.new_event_loop()
         try:
             return loop.run_until_complete(
-                self.site._safe_dispatch(self.Request(uri)))
+                self.site._safe_dispatch(Request(uri)))
         finally:
             loop.close()
 
@@ -159,7 +159,7 @@ class TestResolve(unittest.TestCase):
 
     def testRequest(self):
         """Check how request sticker is passed to handler"""
-        req = self.Request('/request')
+        req = Request('/request')
         loop = asyncio.new_event_loop()
         try:
             nreq = loop.run_until_complete(self.site._resolve(req))
@@ -303,10 +303,6 @@ class TestDecorators(unittest.TestCase):
             return wrapper
 
 
-        class Request(BaseRequest):
-            def __init__(self, uri):
-                self.uri = uri
-
         class Root(web.Resource):
 
             @web.page
@@ -372,13 +368,12 @@ class TestDecorators(unittest.TestCase):
                     self.user.id, self.id, id)
 
         self.site = web.Site(resources=[Root()])
-        self.Request = Request
 
     def resolve(self, uri):
         loop = asyncio.new_event_loop()
         try:
             return loop.run_until_complete(
-                self.site._resolve(self.Request(uri)))
+                self.site._resolve(Request(uri)))
         finally:
             loop.close()
 
@@ -440,11 +435,6 @@ class TestMethod(unittest.TestCase):
 
     def setUp(self):
 
-        class Request(BaseRequest):
-            def __init__(self, meth, uri):
-                self.method = meth
-                self.uri = uri
-
         class Root(web.Resource):
 
             def __init__(self):
@@ -470,7 +460,7 @@ class TestMethod(unittest.TestCase):
                 return 'PAGE:%s' % page
 
         class Hello(web.Resource):
-            http_resolver_class = web.MethodResolver
+            http_resolver = web.MethodResolver()
 
             @web.page
             def GET(self):
@@ -481,7 +471,7 @@ class TestMethod(unittest.TestCase):
                 return "hello:put:" + data
 
         class Forum(web.Resource):
-            http_resolver_class = web.MethodResolver
+            http_resolver = web.MethodResolver()
 
             def __init__(self, user):
                 self.user = user
@@ -498,7 +488,7 @@ class TestMethod(unittest.TestCase):
             index_method = 'default'
 
         class Greeting(web.Resource):
-            http_resolver_class = NewResolver
+            http_resolver = NewResolver()
 
             @web.page
             def default(self, arg=None):
@@ -510,13 +500,12 @@ class TestMethod(unittest.TestCase):
                 raise RuntimeError("Problem")
 
         self.site = web.Site(resources=[Root()])
-        self.Request = Request
 
     def resolve(self, meth, uri):
         loop = asyncio.new_event_loop()
         try:
             return loop.run_until_complete(
-                self.site._resolve(self.Request(meth, uri)))
+                self.site._resolve(MethRequest(meth, uri)))
         finally:
             loop.close()
 
@@ -585,10 +574,6 @@ class TestDictResource(unittest.TestCase):
 
     def setUp(self):
 
-        class Request(BaseRequest):
-            def __init__(self, uri):
-                self.uri = uri
-
         class About(web.Resource):
             """Uses default resolver"""
 
@@ -603,13 +588,12 @@ class TestDictResource(unittest.TestCase):
         self.site = web.Site(resources=[
             web.DictResource(about=About()),
             ])
-        self.Request = Request
 
     def resolve(self, uri):
         loop = asyncio.new_event_loop()
         try:
             return loop.run_until_complete(
-                self.site._resolve(self.Request(uri)))
+                self.site._resolve(Request(uri)))
         finally:
             loop.close()
 

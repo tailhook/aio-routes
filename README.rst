@@ -6,6 +6,10 @@ Aio-routes is a URL routing library for web applications. It doesn't support
 typical pattern-based or regular-expression bases routing. But rather it
 traverses objects while resolving an url. See examples below, for more info
 
+Aioroutes works not only for HTTP but for any kind of RPC, for example for
+method invocation over WebSockets. HTTP support is built-in, for other kinds
+of things small pieces of glue code is needed.
+
 
 Usage
 =====
@@ -293,6 +297,12 @@ directories, not just ``/js`` and ``/css`` as in example.
 
 You may also "mount" static resource at arbitrary point in the tree, just like
 any other resource.
+
+
+Beyond HTTP
+===========
+
+TBD
 
 
 History

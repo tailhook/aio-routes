@@ -127,7 +127,7 @@ class CompletionRedirect(Redirect):
         return sup
 
 
-class ChildNotFound(Exception):
+class OutOfScopeError(Exception):
     """Raised by resolve_local to notify that there is not such child"""
 
 

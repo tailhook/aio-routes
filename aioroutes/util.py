@@ -1,3 +1,6 @@
+import asyncio
+from .exceptions import OutOfScopeError
+
 
 class cached_property(object):
 
@@ -20,4 +23,15 @@ class marker_object(object):
 
     def __repr__(self):
         return '<{}>'.format(self.name)
+
+
+class DictResourceMixin(dict):
+
+    @asyncio.coroutine
+    def resolve_local(self, name):
+        try:
+            return self[name]
+        except KeyError:
+            raise OutOfScopeError()
+
 

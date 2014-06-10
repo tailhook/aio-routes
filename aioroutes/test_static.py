@@ -2,12 +2,12 @@ import asyncio
 import unittest
 
 from aioroutes.static import StaticResource
-from aioroutes.request import BaseRequest
+from aioroutes.http import BaseHTTPRequest
 from aioroutes.exceptions import NotFound
 import aioroutes as web
 
 
-class Request(BaseRequest):
+class Request(BaseHTTPRequest):
     def __init__(self, uri):
         self.uri = uri
 
