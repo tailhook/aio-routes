@@ -2,13 +2,13 @@ import asyncio
 import logging
 import aiohttp.server
 
-from .request import BaseRequest, FORM_CONTENT_TYPE
+from .http import BaseHTTPRequest, FORM_CONTENT_TYPE
 
 
 log = logging.getLogger(__name__)
 
 
-class Request(BaseRequest):
+class Request(BaseHTTPRequest):
 
     def __init__(self, proto, message):
         self.uri = message.path
