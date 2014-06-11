@@ -213,6 +213,7 @@ class Context(object):
         self.resource_path = [resource]
         self.args = args
         self.kwargs = kwargs
+        self.artifacts.clear()
 
     def set_args(self, args):
         self.args = args
