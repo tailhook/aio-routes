@@ -24,7 +24,7 @@ class PathResolver(HierarchicalResolver):
     index_method = 'index'
     default_method = 'default'
     future_path_artifact = 'future_path'
-    path_path_artifact = 'future_path'
+    past_path_artifact = 'past_path'
 
     @staticmethod
     def get_path(ctx):
