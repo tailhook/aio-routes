@@ -12,14 +12,10 @@ class Request(BaseHTTPRequest):
 
     def __init__(self, proto, message):
         self.uri = message.path
-        self.content_type = None
-        cookie = []
-        for k, v in message.headers:
-            if k == 'CONTENT-TYPE':
-                self.content_type = v
-            elif k == 'COOKIE':
-                cookie.append(v)
-        self.cookie = ','.join(cookie)
+        self.content_type = message.headers.get('CONTENT-TYPE', None)
+        self.cookie = ''
+        if 'COOKIE' in message.headers:
+            self.cookie = ','.join(message.headers.getall('COOKIE'))
         super().__init__()
 
 
