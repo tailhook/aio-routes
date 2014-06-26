@@ -45,6 +45,7 @@ class HttpProto(aiohttp.server.ServerHttpProtocol):
             if isinstance(headers, dict):
                 headers = headers.items()
             resp.add_headers(*headers)
+            resp.add_header('CONTENT-LENGTH', str(len(data)))
             resp.send_headers()
             resp.write(data)
             resp.write_eof()
