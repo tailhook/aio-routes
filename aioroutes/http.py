@@ -61,13 +61,14 @@ class Site(object):
     site_scope = HTTP
     positional_arguments_factory = staticmethod(PathResolver.get_path)  # sorry
     keyword_arguments_factory = attrgetter('request.form_arguments')
+    context_factory = Context
 
     def __init__(self, *, resources=()):
         self.resources = resources
 
     @asyncio.coroutine
     def _resolve(self, request):
-        ctx = Context(request, self.site_scope)
+        ctx = self.context_factory(request, self.site_scope)
         for i in self.resources:
             ctx.start(i,
                 *self.positional_arguments_factory(ctx),
