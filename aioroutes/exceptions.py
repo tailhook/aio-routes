@@ -83,6 +83,7 @@ class Redirect(WebException):
         assert status_text is None, "Not Implemented"
         self.status_code = status_code
         self.location = location
+        self.statusline = '{:d}'.format(status_code)
 
     def location_header(self):
         return [('Location', self.location)]
