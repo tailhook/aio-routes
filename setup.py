@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='aio-routes',
-      version='0.1',
+      version='0.2',
       description='Routing for asyncio',
       author='Paul Colomiets',
       author_email='paul@colomiets.name',
