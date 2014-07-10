@@ -103,7 +103,7 @@ class Redirect(WebException):
                     '<h1>{0.statusline}</h1>'
                     '<a href="{0.location}">Follow</a>'
                     '</body>'
-                '</html>'.format(self)
+                '</html>'.format(self).encode('utf-8')
                 )
 
 
