@@ -21,9 +21,9 @@ class Request(BaseHTTPRequest):
 
 class HttpProto(aiohttp.server.ServerHttpProtocol):
 
-    def __init__(self, site):
+    def __init__(self, site, **settings):
         self.__site = site
-        super().__init__()
+        super().__init__(**settings)
 
     @asyncio.coroutine
     def handle_request(self, message, payload):
